@@ -3,6 +3,7 @@ import sys
 import json
 import argparse
 import markdown
+from flask import Flask, send_from_directory
 
 parser = argparse.ArgumentParser(
     description='Create a website from exist file')
@@ -12,6 +13,7 @@ parser.add_argument('-p', '--port', dest='port', default=8090,
                     help='change port to open')
 args = parser.parse_args()
 
+app = Flask("File2Web")
 
 class md():
     def __init__(self, level, msg):
@@ -80,8 +82,6 @@ def files2md():
     return root_md
 
 
-def getmd(files):
-    None
 
 
 def md2html(mdstr):
@@ -90,9 +90,9 @@ def md2html(mdstr):
 <html lang="zh-cn">
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="content-type" />
-<link rel="stylesheet" type="text/css" href="github-syntax-highlight.css">
-  <link rel="stylesheet" type="text/css" href="github-markdown.css">
-  <link rel="stylesheet" type="text/css" href="mjpage-html.css">
+<link rel="stylesheet" type="text/css" href="css/github-syntax-highlight.css">
+  <link rel="stylesheet" type="text/css" href="css/github-markdown.css">
+  <link rel="stylesheet" type="text/css" href="css/mjpage-html.css">
   <style>
     .markdown-body {
       min-width: 200px;
@@ -132,11 +132,18 @@ def md2html(mdstr):
     return html % ret
     # return markdown2.markdown(md)
 
+@app.route('/css/<path:path>')
+def send_css(path):
+    return send_from_directory('css', path)
 
-def main():
+@app.route("/")
+def mainpage():
     md_out = files2md()
     html_out = md2html('[TOC]\n' + str(md_out))
-    print(html_out)
+    return html_out
+
+
+
 
 if __name__ == "__main__":
-    main()
+    app.run(port=args.port)
