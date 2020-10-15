@@ -90,9 +90,9 @@ def md2html(mdstr):
 <html lang="zh-tw">
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="content-type" />
-<link rel="stylesheet" type="text/css" href="css/github-syntax-highlight.css">
-  <link rel="stylesheet" type="text/css" href="css/github-markdown.css">
-  <link rel="stylesheet" type="text/css" href="css/mjpage-html.css">
+<link rel="stylesheet" type="text/css" href="/css/github-syntax-highlight.css">
+  <link rel="stylesheet" type="text/css" href="/css/github-markdown.css">
+  <link rel="stylesheet" type="text/css" href="/css/mjpage-html.css">
   <style>
     .markdown-body {
       min-width: 200px;
@@ -138,12 +138,17 @@ def send_css(path):
 
 
 @app.route('/<path:path>')
-def send_pdf(path):
+def send_file(path):
     if path[-3:] == "pdf":
         return send_from_directory('.', path)
-    if path == 'favicon.ico':
+    elif path == 'favicon.ico':
         return send_from_directory('.', "favicon_resized.png")
-    
+    elif path[-2:] == "md":
+        f = open(path, 'r')
+        data = f.read()
+        f.close()
+        return md2html(data)
+
 @app.route("/")
 def mainpage():
     md_out = files2md()
