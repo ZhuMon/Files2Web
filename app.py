@@ -87,7 +87,7 @@ def files2md():
 def md2html(mdstr):
     exts = ['markdown.extensions.extra', 'markdown.extensions.codehilite','markdown.extensions.tables','markdown.extensions.toc']
     html = '''
-<html lang="zh-cn">
+<html lang="zh-tw">
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="content-type" />
 <link rel="stylesheet" type="text/css" href="css/github-syntax-highlight.css">
@@ -136,6 +136,14 @@ def md2html(mdstr):
 def send_css(path):
     return send_from_directory('css', path)
 
+
+@app.route('/<path:path>')
+def send_pdf(path):
+    if path[-3:] == "pdf":
+        return send_from_directory('.', path)
+    if path == 'favicon.ico':
+        return send_from_directory('.', "favicon_resized.png")
+    
 @app.route("/")
 def mainpage():
     md_out = files2md()
