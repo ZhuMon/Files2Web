@@ -16,17 +16,23 @@ args = parser.parse_args()
 app = Flask("File2Web")
 
 class md():
-    def __init__(self, level, msg):
+    def __init__(self, level, msg, father_path):
         self.level = level
         self.msg = msg
         self.child = []
         self.child_text = []
+        self.pwd = father_path + '/' + msg if father_path != "" else msg
 
     def gen_child_text(self, msg, link):
-        self.child_text.append(md.indent(self.level+1, f"[{msg}]({link})"))
+        if msg == "info.txt":
+            with open(self.pwd + '/' + msg, 'r') as f:
+                for line in f.readlines():
+                    self.child_text.append(md.indent(self.level+1, line))
+        else:
+            self.child_text.append(md.indent(self.level+1, f"[{msg}]({link})"))
 
     def gen_folder(self, msg):
-        child = md(self.level+1, msg)
+        child = md(self.level+1, msg, self.pwd)
         self.child.append(child)
         return child
 
@@ -63,7 +69,7 @@ class md():
 
 def files2md():
     path = "."
-    root_md = md(1, ".")
+    root_md = md(1, ".", '')
     for (dirpath, dirnames, filenames) in os.walk(path):
         nowpath = dirpath.split('/')
         now_md = root_md
