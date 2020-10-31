@@ -3,7 +3,7 @@ import sys
 import json
 import argparse
 import markdown
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, request
 
 parser = argparse.ArgumentParser(
     description='Create a website from exist file')
@@ -16,6 +16,7 @@ args = parser.parse_args()
 app = Flask("File2Web")
 
 class md():
+    ignore_folder = ['css']
     def __init__(self, level, msg, father_path):
         self.level = level
         self.msg = msg
@@ -32,9 +33,10 @@ class md():
             self.child_text.append(md.indent(self.level+1, f"[{msg}]({link})"))
 
     def gen_folder(self, msg):
-        child = md(self.level+1, msg, self.pwd)
-        self.child.append(child)
-        return child
+        if msg not in self.ignore_folder:
+            child = md(self.level+1, msg, self.pwd)
+            self.child.append(child)
+            return child
 
     def indent(level, string):
         if level == 1:
@@ -72,6 +74,14 @@ def files2md():
     root_md = md(1, ".", '')
     for (dirpath, dirnames, filenames) in os.walk(path):
         nowpath = dirpath.split('/')
+        try:
+            for ignore in md.ignore_folder:
+                if ignore in nowpath:
+                    raise Exception
+        except Exception:
+            continue
+        
+        
         now_md = root_md
         
         for n in nowpath:
@@ -143,7 +153,7 @@ def send_css(path):
     return send_from_directory('css', path)
 
 
-@app.route('/<path:path>')
+@app.route('/<path:path>', methods=['GET'])
 def send_file(path):
     if path[-3:] == "pdf":
         return send_from_directory('.', path)
@@ -155,13 +165,16 @@ def send_file(path):
         f.close()
         return md2html(data)
 
-@app.route("/")
+@app.route("/", methods=['GET'])
 def mainpage():
     md_out = files2md()
     html_out = md2html('[TOC]\n' + str(md_out))
     return html_out
 
-
+@app.route('/', methods=['PUT'])
+def update():
+    print(request.json())
+    return '200'
 
 
 if __name__ == "__main__":
