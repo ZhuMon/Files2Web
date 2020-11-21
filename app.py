@@ -2,8 +2,9 @@ import os
 import sys
 import json
 import argparse
-import markdown
+import markdown2
 from flask import Flask, send_from_directory, request
+import subprocess
 
 parser = argparse.ArgumentParser(
     description='Create a website from exist file')
@@ -101,7 +102,8 @@ def files2md():
 
 
 def md2html(mdstr):
-    exts = ['markdown.extensions.extra', 'markdown.extensions.codehilite','markdown.extensions.tables','markdown.extensions.toc']
+    # exts = ['markdown.extensions.extra', 'markdown.extensions.codehilite','markdown.extensions.tables','markdown.extensions.toc', 'markdown.extensions.codehilite']
+    exts = ['cuddled-lists', 'fenced-code-blocks', 'markdown-in-html', 'toc', 'spoiler', 'tables', 'strike', 'task_list']
     html = '''
 <html lang="zh-tw">
 <head>
@@ -109,6 +111,7 @@ def md2html(mdstr):
 <link rel="stylesheet" type="text/css" href="/css/github-syntax-highlight.css">
   <link rel="stylesheet" type="text/css" href="/css/github-markdown.css">
   <link rel="stylesheet" type="text/css" href="/css/mjpage-html.css">
+  <link rel="stylesheet" type="text/css" href="/css/styles.css">
   <style>
     .markdown-body {
       min-width: 200px;
@@ -144,8 +147,9 @@ def md2html(mdstr):
 </body>
 </html>
 '''
-    ret = markdown.markdown(mdstr,extensions=exts)
-    return html % ret
+    #ret = markdown.markdown(mdstr,extensions=exts)
+    ret = markdown2.markdown(mdstr,extras=exts)
+    return html % (ret.toc_html + ret)
     # return markdown2.markdown(md)
 
 @app.route('/css/<path:path>')
@@ -164,11 +168,21 @@ def send_file(path):
         data = f.read()
         f.close()
         return md2html(data)
+    elif path[-3:] == "doc" or path[-4:] == "docx":
+        global sysOS
+        if sysOS.find("Linux") > -1:
+            os.system("xdg-open "+path.replace(' ', '\ '))
+        else:
+            os.system("open "+path.replace(' ', '\ '))
+           
+        return "Opened file"
+
+                
 
 @app.route("/", methods=['GET'])
 def mainpage():
     md_out = files2md()
-    html_out = md2html('[TOC]\n' + str(md_out))
+    html_out = md2html(str(md_out))
     return html_out
 
 @app.route('/', methods=['PUT'])
@@ -178,4 +192,6 @@ def update():
 
 
 if __name__ == "__main__":
+    global sysOS
+    sysOS = subprocess.check_output("uname").decode('utf-8')
     app.run(port=args.port)
