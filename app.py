@@ -68,7 +68,8 @@ class md():
         for child in self.child:
             out += str(child)
         
-        return out
+        # avoid unexpected indent at header
+        return out if out[-2] == '\n' else out + '\n'
 
 def files2md():
     path = "."
