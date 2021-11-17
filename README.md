@@ -5,6 +5,16 @@ Change files representation at localhost to markdown-liked website
 Let you read lots of pdf files more conveniently.
 The program also help you open the doc/docx file by command (`xdg-open` or `open`) 
 
+## Prerequisite
+* python3
+* flask
+* markdown2
+* install dependency
+    ```
+    $ pip3 install -r requirement.txt
+    ```
+
+
 ## Usage
 ```
 $ python3 app.py --help
