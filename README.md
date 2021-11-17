@@ -4,6 +4,9 @@ Change files representation at localhost to markdown-liked website
 ## Introduction
 Let you read lots of pdf files more conveniently.
 The program also help you open the doc/docx file by command (`xdg-open` or `open`) 
+The file in root directory (default: where app.py execute) would not be displayed
+You can put information in `info.txt` in each folder to show information
+
 
 ## Prerequisite
 * python3
@@ -13,7 +16,6 @@ The program also help you open the doc/docx file by command (`xdg-open` or `open
     ```
     $ pip3 install -r requirement.txt
     ```
-
 
 ## Usage
 ```

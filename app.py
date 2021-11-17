@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import json
 import argparse
@@ -8,26 +9,27 @@ import subprocess
 
 parser = argparse.ArgumentParser(
     description='Create a website from exist file')
-parser.add_argument('-f', '--file', dest='outfile',
-                    default='toc.md', help='choose file to store markdown')
+parser.add_argument('-i', '--ignore_file', dest='ignore_file',
+                    default='ignore.txt', help='file to ignore')
 parser.add_argument('-p', '--port', dest='port', default=8090,
                     help='change port to open')
+parser.add_argument('-d', '--dictionary', dest='root_dict', default='.',
+                    help='the root dictionary to represent')
 args = parser.parse_args()
 
 app = Flask("File2Web")
 
 class md():
-    ignore_folder = ['css']
-    def __init__(self, level, msg, father_path):
+    ignore_folder = ['css', 'img']
+    def __init__(self, level, msg):
         self.level = level
         self.msg = msg
-        self.child = []
+        self.child = [] # the mds of subfolder in this folder
         self.child_text = []
-        self.pwd = father_path + '/' + msg if father_path != "" else msg
 
-    def gen_child_text(self, msg, link):
+    def gen_child_text(self, msg, link, full_path):
         if msg == "info.txt":
-            with open(self.pwd + '/' + msg, 'r') as f:
+            with open(full_path + "/" + msg, 'r') as f:
                 for line in f.readlines():
                     self.child_text.append(md.indent(self.level+1, line))
         else:
@@ -35,7 +37,7 @@ class md():
 
     def gen_folder(self, msg):
         if msg not in self.ignore_folder:
-            child = md(self.level+1, msg, self.pwd)
+            child = md(self.level+1, msg)
             self.child.append(child)
             return child
 
@@ -48,6 +50,10 @@ class md():
             return f"{'    '*(level-3)}* {string}\n"
 
     def get_child(self, name):
+        """
+        get a child md by name 
+        (get a subfolder)
+        """
         for c in self.child:
             if c.msg == name:
                 return c
@@ -71,29 +77,67 @@ class md():
         # avoid unexpected indent at header
         return out if out[-2] == '\n' else out + '\n'
 
+def get_ignore_files():
+    rules = []
+    folder_rules = []
+    with open(args.ignore_file, 'r') as f:
+        for l in f.readlines():
+            if l[-2] == '/':
+                folder_rules.append(re.compile(l[:-2], re.X))
+            else:
+                rules.append(re.compile(l[:-1], re.X))
+
+    return rules, folder_rules
+
 def files2md():
-    path = "."
-    root_md = md(1, ".", '')
+    path = args.root_dict
+    root_md = md(1, path)
+    rules, folder_rules = get_ignore_files()
     for (dirpath, dirnames, filenames) in os.walk(path):
-        nowpath = dirpath.split('/')
+        nowpath = dirpath[len(path)+1:].split('/')
         try:
             for ignore in md.ignore_folder:
                 if ignore in nowpath:
                     raise Exception
+            for r in folder_rules:
+                result = r.match(dirpath)
+                if result == None:
+                    raise Exception
+            # if nowpath == ['']:
+                # raise Exception
         except Exception:
             continue
         
         
         now_md = root_md
         
-        for n in nowpath:
-            now_md = now_md.get_child(n)
+        if nowpath != ['']:
+            # In the subfolder of specified path, find the last folder 
+            for n in nowpath:
+                now_md = now_md.get_child(n)
 
-        for d in dirnames:
-            now_md.gen_folder(d)
+            # generate md of subfolder of this folder
+            for d in dirnames:
+                now_md.gen_folder(d)
+        else: # root md use next level to store files
+            now_md = now_md.get_child("PWD")
 
+
+
+
+        # generate the text to display
         for f in sorted(filenames):
-            now_md.gen_child_text(f, (dirpath + "/" + f).replace(" ", "%20"))
+            # filter the file not to display
+            flag = 0
+            for r in rules:
+                res = r.match(f)
+                if res != None:
+                    flag = 1
+                    break
+            if flag == 1:
+                continue
+
+            now_md.gen_child_text(f, (dirpath + "/" + f).replace(" ", "%20"), dirpath)
 
     root_md.msg = "Abstract"
     root_md.child_text = []
@@ -195,4 +239,5 @@ def update():
 if __name__ == "__main__":
     global sysOS
     sysOS = subprocess.check_output("uname").decode('utf-8')
+    # app.debug = True
     app.run(port=args.port)
