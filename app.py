@@ -148,7 +148,7 @@ def files2md():
 
 def md2html(mdstr):
     # exts = ['markdown.extensions.extra', 'markdown.extensions.codehilite','markdown.extensions.tables','markdown.extensions.toc', 'markdown.extensions.codehilite']
-    exts = ['cuddled-lists', 'fenced-code-blocks', 'markdown-in-html', 'toc', 'spoiler', 'tables', 'strike', 'task_list']
+    exts = ['cuddled-lists', 'fenced-code-blocks', 'markdown-in-html', 'toc', 'spoiler', 'tables', 'strike', 'task_list', 'code-friendly']
     html = '''
 <html lang="zh-tw">
 <head>
