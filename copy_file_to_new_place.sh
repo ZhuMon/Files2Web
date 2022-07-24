@@ -5,4 +5,4 @@ mkdir -f $1/css
 #ln css/mjpage-html.css $1/css/mjpage-html.css
 cp favicon_resized.png $1/favicon_resized.png
 cp -r css $1/
-
+cp ignore.txt $1/ignore.txt
