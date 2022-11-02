@@ -213,7 +213,7 @@ def send_css(path):
 
 @app.route('/<path:path>', methods=['GET'])
 def send_file(path):
-    if path[-3:] == "pdf":
+    if path[-3:] in ["pdf", "png"]:
         return send_from_directory('.', path)
     elif path == 'favicon.ico':
         return send_from_directory(f2w_path, "favicon_resized.png")
