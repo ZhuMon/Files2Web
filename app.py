@@ -40,8 +40,11 @@ class md():
     def gen_child_text(self, msg, link, full_path):
         if msg == "info.txt":
             with open(full_path + "/" + msg, 'r') as f:
+                info_text = []
+                # Place info.txt at first line
                 for line in f.readlines():
-                    self.child_text.append(md.indent(self.level+1, line))
+                    info_text.append(md.indent(self.level+1, line))
+                self.child_text = info_text + self.child_text
         else:
             self.child_text.append(md.indent(self.level+1, f"[{msg}]({link})"))
 
