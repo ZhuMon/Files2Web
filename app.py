@@ -4,7 +4,7 @@ import sys
 import json
 import argparse
 import markdown2
-from flask import Flask, send_from_directory, request
+from flask import Flask, send_from_directory, request, redirect
 import subprocess
 
 app = Flask("File2Web")
@@ -232,7 +232,10 @@ def send_file(path):
         else:
             os.system("open "+path.replace(' ', '\ '))
 
-        return "Opened file"
+        return "Opened the file"
+    elif path[-2:] == "py":
+        os.system("python3 "+path.replace(' ', '\ '))
+        return redirect(request.referrer)
 
 
 @app.route("/", methods=['GET'])
